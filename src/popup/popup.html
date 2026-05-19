@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Futures Journal</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup">
+    <div class="popup-header">
+      <img src="../../icons/icon-48.png" alt="FJ" class="popup-logo" onerror="this.style.display='none'">
+      <div>
+        <h2>Futures Journal</h2>
+        <p class="subtitle">Emergency Brake</p>
+      </div>
+    </div>
+
+    <!-- 로딩 -->
+    <div id="loading" class="section">
+      <p class="muted">불러오는 중...</p>
+    </div>
+
+    <!-- 미인증 -->
+    <div id="not-authed" class="section hidden">
+      <p>Futures Journal 계정에 연결되지 않았습니다.</p>
+      <div class="token-form">
+        <label for="token-input">확장 토큰 붙여넣기:</label>
+        <input type="text" id="token-input" placeholder="fj_xxxxxxxxxxxxxxxx" autocomplete="off">
+        <button id="save-token" class="btn btn-primary">저장</button>
+      </div>
+      <p class="hint">
+        토큰 발급:
+        <a href="https://futures-journal-virid.vercel.app/settings/extension" target="_blank">
+          사이트 → 설정 → 확장 토큰
+        </a>
+      </p>
+      <div id="token-error" class="error hidden"></div>
+    </div>
+
+    <!-- 인증됨 -->
+    <div id="authed" class="section hidden">
+      <div class="status-row">
+        <span class="status-dot"></span>
+        <span class="status-text">연결됨</span>
+        <span id="user-email" class="email"></span>
+      </div>
+
+      <hr>
+
+      <div class="setting-row">
+        <label class="toggle-label">
+          <span>Emergency Brake 활성화</span>
+          <label class="toggle">
+            <input type="checkbox" id="extension-enabled" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </label>
+      </div>
+
+      <div class="setting-block">
+        <label for="custom-sentence">강제 타이핑 문장:</label>
+        <textarea id="custom-sentence" maxlength="100" rows="2"></textarea>
+        <button id="save-sentence" class="btn btn-secondary">저장</button>
+        <div id="sentence-saved" class="saved-msg hidden">✓ 저장됨</div>
+      </div>
+
+      <hr>
+
+      <div class="stats-block">
+        <div class="stat-row">
+          <span>이번 달 발동</span>
+          <span id="this-month-count" class="stat-val">—</span>
+        </div>
+        <div class="stat-row">
+          <span>마지막 발동</span>
+          <span id="last-triggered" class="stat-val">—</span>
+        </div>
+      </div>
+
+      <hr>
+
+      <button id="logout" class="btn btn-danger">로그아웃</button>
+    </div>
+
+    <footer>
+      <a href="https://futures-journal-virid.vercel.app" target="_blank">대시보드 열기 →</a>
+    </footer>
+  </div>
+
+  <script src="../core/config.js"></script>
+  <script src="../core/auth.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Claude 지침 파일 — git 제외
+CLAUDE.md
+
+# 개발 임시 파일
+*.log
+.DS_Store
+Thumbs.db
+
+# npm
+node_modules/
+
+# 빌드 산출물
+dist/
+build/
+*.zip
+
+# 로컬 환경 설정
+.env
+.env.local

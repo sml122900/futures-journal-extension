@@ -1,0 +1,8 @@
+{
+  "name": "futures-journal-extension",
+  "version": "0.1.0",
+  "description": "Futures Journal Emergency Brake Chrome Extension",
+  "scripts": {
+    "pack": "powershell Compress-Archive -Path src,icons,_locales,manifest.json -DestinationPath futures-journal-extension.zip -Force"
+  }
+}
