@@ -3,14 +3,39 @@
 // ★ 이 줄이 SW 콘솔에 보이면 background.js가 정상 로드된 것
 console.log('[FJ BG] background.js loaded at', new Date().toISOString());
 
+const _API_BASE = 'https://futures-journal-virid.vercel.app';
+
 chrome.runtime.onInstalled.addListener(({ reason }) => {
   console.log('[FJ BG] onInstalled reason:', reason);
   if (reason === 'install') {
     // chrome.tabs.create 는 "tabs" 권한 필요
     chrome.tabs.create({
-      url: 'https://futures-journal-virid.vercel.app/settings/extension'
+      url: `${_API_BASE}/settings/extension`
     }).catch(e => console.warn('[FJ BG] tabs.create failed:', e.message));
   }
+});
+
+// ─── Keep-warm 알람 ────────────────────────────────────────────
+// Vercel 서버리스 함수는 ~5분 비활성 시 cold start.
+// 4분마다 ping → 서버 warm + MV3 service worker 재기동 트리거.
+
+chrome.alarms.get('keepWarm', (alarm) => {
+  if (!alarm) {
+    chrome.alarms.create('keepWarm', { delayInMinutes: 1, periodInMinutes: 4 });
+    console.log('[FJ BG] keepWarm alarm created');
+  }
+});
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name !== 'keepWarm') return;
+  const stored = await chrome.storage.local.get('fj_token');
+  const token = stored['fj_token'];
+  if (!token) return;
+  // service worker에서 직접 fetch — CORS 무관
+  fetch(`${_API_BASE}/api/emergency-check/baseline`, {
+    headers: { Authorization: `Bearer ${token}` },
+  }).catch(() => {});
+  console.log('[FJ BG] keep-warm ping sent');
 });
 
 // ─── API Fetch 프록시 ─────────────────────────────────────────

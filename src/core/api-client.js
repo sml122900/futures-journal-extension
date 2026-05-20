@@ -100,7 +100,7 @@ const ApiClient = {
     return this._fetch(
       `${Config.API_BASE}/api/emergency-check/baseline`,
       { headers: { 'Authorization': auth } },
-      5_000  // 초기 로드 여유 있게
+      12_000  // cold start 대응 (캐시 갱신용이라 지연 허용)
     );
   },
 
