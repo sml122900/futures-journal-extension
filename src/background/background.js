@@ -35,7 +35,6 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   fetch(`${_API_BASE}/api/emergency-check/baseline`, {
     headers: { Authorization: `Bearer ${token}` },
   }).catch(() => {});
-  console.log('[FJ BG] keep-warm ping sent');
 });
 
 // ─── API Fetch 프록시 ─────────────────────────────────────────
@@ -45,15 +44,10 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type !== 'API_FETCH') return false;
 
-  console.log('[FJ BG] ▶ API_FETCH received:', msg.method, msg.url);
-
   _doFetch(msg)
-    .then(result => {
-      console.log('[FJ BG] ✓ done:', msg.url, '→ status', result.status);
-      sendResponse(result);
-    })
+    .then(sendResponse)
     .catch(e => {
-      console.error('[FJ BG] ✗ error:', e.name, e.message, '| url:', msg.url);
+      console.error('[FJ BG] fetch error:', e.name, e.message, '| url:', msg.url);
       sendResponse({ error: e.message || 'fetch failed' });
     });
 
@@ -61,14 +55,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 });
 
 async function _doFetch({ url, method = 'GET', headers = {}, body = null, timeoutMs = 5000 }) {
-  console.log('[FJ BG] fetch →', method, url);
-  console.log('[FJ BG] headers:', JSON.stringify(headers));
-
   const controller = new AbortController();
-  const tid = setTimeout(() => {
-    console.warn('[FJ BG] timeout!', url);
-    controller.abort();
-  }, timeoutMs);
+  const tid = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const res = await fetch(url, {
@@ -79,17 +67,14 @@ async function _doFetch({ url, method = 'GET', headers = {}, body = null, timeou
     });
     clearTimeout(tid);
 
-    console.log('[FJ BG] response status:', res.status, '| ok:', res.ok);
-
     let data = null;
     try { data = await res.json(); } catch {
-      console.warn('[FJ BG] JSON parse failed (non-JSON response)');
+      console.warn('[FJ BG] non-JSON response from', url);
     }
 
     return { ok: res.ok, status: res.status, data };
   } catch (e) {
     clearTimeout(tid);
-    console.error('[FJ BG] fetch threw:', e.name, e.message);
     if (e.name === 'AbortError') throw new Error('AbortError');
     throw e;
   }

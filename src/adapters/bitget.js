@@ -193,21 +193,14 @@ const BitgetAdapter = {
     const byTestId = document.querySelector('input[data-testid*="OrderAmountInput"]');
     if (byTestId && byTestId.value) {
       const val = parseFloat(byTestId.value);
-      if (!isNaN(val) && val > 0) {
-        console.log('[FJ] getSize via testid:', byTestId.dataset.testid, '=', val);
-        return val;
-      }
+      if (!isNaN(val) && val > 0) return val;
     }
 
-    // 2순위 이하: 목록 순서대로 시도
     for (const sel of this.SIZE_INPUT_SELECTORS) {
       const input = document.querySelector(sel);
       if (input && input.value) {
         const val = parseFloat(input.value);
-        if (!isNaN(val) && val > 0) {
-          console.log('[FJ] getSize via selector:', sel, '=', val);
-          return val;
-        }
+        if (!isNaN(val) && val > 0) return val;
       }
     }
 

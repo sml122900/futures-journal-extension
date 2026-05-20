@@ -24,11 +24,8 @@ const ApiClient = {
         timeoutMs,
       };
 
-      console.log('[FJ] → sendMessage:', msg.method, url);
-
       chrome.runtime.sendMessage(msg, (resp) => {
         const runtimeErr = chrome.runtime.lastError;
-        console.log('[FJ] ← from BG:', resp, runtimeErr ? '| err: ' + runtimeErr.message : '');
 
         if (runtimeErr) {
           return reject(new Error(runtimeErr.message));
@@ -133,13 +130,4 @@ const ApiClient = {
     });
   },
 
-  // ─── 팝업용 (popup.js에서 직접 fetch — 확장 context이므로 CORS 불필요) ──
-  // popup.js는 fetch를 직접 호출하므로 이 메서드는 사용되지 않음
-  async getUserStats() {
-    const auth = await this._bearerToken();
-    return this._fetch(
-      `${Config.API_BASE}/api/extension/stats`,
-      { headers: { 'Authorization': auth } }
-    );
-  },
 };

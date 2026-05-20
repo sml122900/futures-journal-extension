@@ -65,30 +65,17 @@ function localPreCheck(orderInfo, baseline) {
 // ─── 초기화 ──────────────────────────────────────────────────
 
 (async function init() {
-  console.log('[FJ Extension] v0.1.0 init on', location.href);
+  console.log('[FJ Extension] init on', location.href);
 
-  // 버튼별 이벤트 연결 대신 document 레벨 전역 캡처 리스너 하나로 통일.
-  // closest()가 클릭된 자식 요소에서 부모 버튼을 찾아줌 → SPA 동적 렌더링 대응.
   document.addEventListener('click', handleEntryClick, true);
 
-  // ── 스토리지 전체 덤프 (토큰 저장 여부 확인) ──
-  const allStorage = await chrome.storage.local.get(null);
-  console.log('[FJ DEBUG] storage dump:', JSON.stringify(allStorage));
-
-  // ── 토큰 상태 확인 ──
-  const token = await Auth.getToken();
   const isAuthed = await Auth.isAuthenticated();
-  console.log('[FJ DEBUG] token:', token ? token.substring(0, 12) + '...' : 'null');
-  console.log('[FJ DEBUG] isAuthed:', isAuthed);
-
   if (isAuthed) {
-    console.log('[FJ DEBUG] → calling BaselineCache.getOrFetch()');
     BaselineCache.getOrFetch();
     setInterval(() => BaselineCache.refresh(), Config.BASELINE_TTL);
-    // Vercel cold start 방지: baseline 로드와 동시에 warm-up 요청
     ApiClient.warmUp();
   } else {
-    console.warn('[FJ DEBUG] → isAuthed=false, baseline skipped. 팝업에서 토큰을 등록하세요.');
+    console.warn('[FJ] not authenticated — visit the popup to register token');
   }
 
   checkSelectorHealth();
@@ -121,14 +108,9 @@ function handleEntryClick(event) {
 
   if (!button) return; // 진입 버튼 아님 → 즉시 반환
 
-  console.log('[FJ DEBUG] Entry button click detected:',
-    'role=' + (button.getAttribute('role') || 'none'),
-    'text=' + button.textContent?.trim().substring(0, 20)
-  );
-
   const orderInfo = BitgetAdapter.extractOrderInfo(button);
   if (!orderInfo || !orderInfo.size) {
-    console.log('[FJ] size not detected — passing through. symbol:', orderInfo?.symbol, 'side:', orderInfo?.side);
+    console.warn('[FJ] size not detected — passing through');
     return; // 사이즈 미감지 → 정상 진입 (안전 우선)
   }
 
@@ -156,7 +138,6 @@ async function _handleAsync(button, orderInfo) {
 
   const baseline = await BaselineCache.get();
   if (localPreCheck(orderInfo, baseline) === 'pass') {
-    console.log('[FJ] Local pre-check passed — skip server call');
     proceedWithEntry(button);
     return;
   }
