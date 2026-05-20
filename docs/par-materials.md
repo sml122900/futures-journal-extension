@@ -8,6 +8,7 @@
 | 2 | Bitget API 응답 필드명 불일치로 baseline 90개 포지션 전부 필터링 | 진단 스크립트로 raw 응답 필드명 추적, `openTotalPos×openAvgPrice` notional 계산으로 대체 | baseline 생성 성공, Emergency Brake 정상 작동 |
 | 3 | avg 기준 발동 임계값이 현실과 동떨어짐 (큰 거래 1~2건이 평균 왜곡) | referenceSize를 median 우선으로 변경 | 발동 기준이 실제 매매 패턴과 일치 |
 | 4 | async 이후 `preventDefault` 호출이 동작 안 하는 브라우저 버그 | 클릭 핸들러를 동기/비동기로 분리 (handleEntryClick → _handleAsync) | 모든 진입 버튼 인터셉트 정상화 |
+| 5 | 상태 기반 차단 트리거(시간대, 손실 등)는 클릭 시점 체크로 감지 불가 | background 5분 알람 + content 폴링으로 `/api/extension/blocking-status` 주기 조회, 차단 시 fixed 빨간 띠(banner.js) 표시 | 클릭 전에도 차단 상태 시각적 인지 가능 |
 | 5 | SPA 동적 렌더링으로 버튼별 이벤트 연결이 불안정 | MutationObserver 제거, `document.addEventListener('click', ..., true)` 단일 리스너로 통일 | 코드 단순화 + 타이밍 문제 해소 |
 | 6 | emergency-check API 응답 3~4초 (Vercel serverless) | DB 쿼리 순차 실행 구조 분석, `computeEmergency()` 순수 함수 추출 후 3배치 병렬화 (`Promise.all`) | 순차 4~7 쿼리 → 2~3 병렬 배치, EmergencySetting 중복 쿼리 제거 |
 | 7 | Vercel Cron 5개 라우트 모두 401 반환 | Vercel이 `Authorization: Bearer`를 보내지만 코드가 `x-cron-secret` 헤더를 읽고 있던 불일치 발견 | 5개 라우트 인증 일괄 수정, cron 정상 실행 |
