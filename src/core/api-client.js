@@ -122,6 +122,15 @@ const ApiClient = {
     });
   },
 
+  async fetchBlockingStatus() {
+    const auth = await this._bearerToken();
+    return this._fetch(
+      `${Config.API_BASE}/api/extension/blocking-status`,
+      { headers: { 'Authorization': auth } },
+      8_000
+    );
+  },
+
   async reportSelectorFailure(data) {
     this._send(`${Config.API_BASE}/api/extension/selector-failure`, {
       method:  'POST',

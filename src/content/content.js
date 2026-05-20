@@ -74,6 +74,10 @@ function localPreCheck(orderInfo, baseline) {
     BaselineCache.getOrFetch();
     setInterval(() => BaselineCache.refresh(), Config.BASELINE_TTL);
     ApiClient.warmUp();
+
+    // 차단 상태 초기 체크 + 5분 폴링
+    _checkAndUpdateBanner();
+    setInterval(_checkAndUpdateBanner, 5 * 60_000);
   } else {
     console.warn('[FJ] not authenticated — visit the popup to register token');
   }
@@ -165,7 +169,33 @@ function proceedWithEntry(button) {
   requestAnimationFrame(() => { button.dataset.fjBypass = 'false'; });
 }
 
+// ─── Background 메시지 수신 ──────────────────────────────────
+
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === 'BLOCKING_STATUS_UPDATE') {
+    if (msg.isBlocking) Banner.update(msg.reasons);
+    else Banner.clear();
+  }
+});
+
 // ─── 셀렉터 헬스 체크 ────────────────────────────────────────
+
+// ─── 차단 상태 배너 ──────────────────────────────────────────
+
+async function _checkAndUpdateBanner() {
+  try {
+    const status = await ApiClient.fetchBlockingStatus();
+    if (status.isBlocking) {
+      Banner.update(status.reasons);
+    } else {
+      Banner.clear();
+    }
+  } catch (e) {
+    if (e.message !== 'not-authenticated') {
+      console.warn('[FJ] blocking-status check failed:', e.message);
+    }
+  }
+}
 
 function checkSelectorHealth() {
   setTimeout(() => {

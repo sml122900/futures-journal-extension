@@ -26,15 +26,48 @@ chrome.alarms.get('keepWarm', (alarm) => {
   }
 });
 
+// ─── blocking-status 폴링 알람 (5분) ─────────────────────────
+
+chrome.alarms.get('blockingStatus', (alarm) => {
+  if (!alarm) {
+    chrome.alarms.create('blockingStatus', { delayInMinutes: 1, periodInMinutes: 5 });
+    console.log('[FJ BG] blockingStatus alarm created');
+  }
+});
+
 chrome.alarms.onAlarm.addListener(async (alarm) => {
-  if (alarm.name !== 'keepWarm') return;
-  const stored = await chrome.storage.local.get('fj_token');
-  const token = stored['fj_token'];
-  if (!token) return;
-  // service worker에서 직접 fetch — CORS 무관
-  fetch(`${_API_BASE}/api/emergency-check/baseline`, {
-    headers: { Authorization: `Bearer ${token}` },
-  }).catch(() => {});
+  if (alarm.name === 'keepWarm') {
+    const stored = await chrome.storage.local.get('fj_token');
+    const token = stored['fj_token'];
+    if (!token) return;
+    fetch(`${_API_BASE}/api/emergency-check/baseline`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).catch(() => {});
+    return;
+  }
+
+  if (alarm.name === 'blockingStatus') {
+    const stored = await chrome.storage.local.get('fj_token');
+    const token = stored['fj_token'];
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${_API_BASE}/api/extension/blocking-status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+
+      // 활성 비트겟 탭에 차단 상태 전달
+      const tabs = await chrome.tabs.query({ url: '*://www.bitget.com/futures/*' });
+      for (const tab of tabs) {
+        chrome.tabs.sendMessage(tab.id, {
+          type: 'BLOCKING_STATUS_UPDATE',
+          isBlocking: data.isBlocking,
+          reasons: data.reasons ?? [],
+        }).catch(() => {});
+      }
+    } catch { /**/ }
+  }
 });
 
 // ─── API Fetch 프록시 ─────────────────────────────────────────
