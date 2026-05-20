@@ -51,7 +51,10 @@ function localPreCheck(orderInfo, baseline) {
   }
   if (baseline.enabled === false) return 'pass';
 
-  const refSize = Math.max(baseline.avgPositionSize, baseline.medianPositionSize || 0);
+  // 서버(emergency-detector)와 동일한 로직: median 우선, 없으면 avg * 0.3
+  const refSize = baseline.medianPositionSize > 0
+    ? baseline.medianPositionSize
+    : baseline.avgPositionSize * 0.3;
   if (refSize <= 0) return 'check';
 
   const sizeMultiplier = orderInfo.size / refSize;
